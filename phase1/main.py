@@ -15,4 +15,4 @@ def lire_coordonnees(nom_fichier):
         print(f"Attention: Ton fichier {nom_fichier} n'a pas été trouvé !")
     return points
 
-lire_coordonnees("points.txt")
+print(lire_coordonnees("phase1/points.txt"))
