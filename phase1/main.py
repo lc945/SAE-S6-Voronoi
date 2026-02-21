@@ -36,6 +36,6 @@ point_A = mes_points[0]
 point_B = mes_points[1]
 
 test_avec_coordonnee_fichier = calculer_distance(point_A, point_B)
-print("Le point A est :", point_A)
-print("Le point B est :", point_B)
-print("La distance entre les deux est :", round(test_avec_coordonnee_fichier,2) # round c'est pour arrondir le résultat à 2 chiffre apres la virgule.
+print("Le point A est : ", point_A)
+print("Le point B est : ", point_B)
+print("La distance entre les deux est : ", round(test_avec_coordonnee_fichier,2)) # round c'est pour arrondir le résultat à 2 chiffre apres la virgule.
