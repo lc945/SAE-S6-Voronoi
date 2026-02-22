@@ -1,6 +1,5 @@
-import pandas as pd
 import numpy as np      
-import matplotlib as  mpl 
+import matplotlib.pyplot as plt
 import math 
 
 def lire_coordonnees(nom_fichier):
@@ -51,8 +50,6 @@ test_avec_coordonnee_fichier = calculer_distance(point_A, point_B)
 print("Le point A est : ", point_A)
 print("Le point B est : ", point_B)
 print("La distance entre les deux est : ", round(test_avec_coordonnee_fichier,2)) # round c'est pour arrondir le résultat à 2 chiffre apres la virgule.
-
-import matplotlib.pyplot as plt
 
 taille_max = 0
 for point in mes_points:
