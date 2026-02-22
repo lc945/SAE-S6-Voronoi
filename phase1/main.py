@@ -29,6 +29,18 @@ def calculer_distance(point1, point2):
     distance = math.sqrt((x2 - x1)**2 + (y2 - y1)**2) # On calcule la distance Euclidienne point 1 et point 2 
     
     return distance
+def trouver_point_plus_proche(pixel_x, pixel_y, liste_points):
+    distance_min = float('inf')
+    index_du_plus_proche = -1
+    for index in range(len(liste_points)):
+        point = liste_points[index]
+        distance = calculer_distance((pixel_x, pixel_y), point)
+
+        if distance < distance_min:
+            distance_min = distance
+            index_du_plus_proche = index
+            
+    return index_du_plus_proche
 
 print(calculer_distance((0, 0), (3, 4)))
 
@@ -39,3 +51,29 @@ test_avec_coordonnee_fichier = calculer_distance(point_A, point_B)
 print("Le point A est : ", point_A)
 print("Le point B est : ", point_B)
 print("La distance entre les deux est : ", round(test_avec_coordonnee_fichier,2)) # round c'est pour arrondir le résultat à 2 chiffre apres la virgule.
+
+import matplotlib.pyplot as plt
+
+taille_max = 0
+for point in mes_points:
+    if point[0] > taille_max:
+        taille_max = int(point[0])
+    if point[1] > taille_max:
+        taille_max = int(point[1])
+
+taille_max = taille_max + 10
+
+grille = np.zeros((taille_max, taille_max))
+
+for y in range(taille_max):
+    for x in range(taille_max):
+        grille[y, x] = trouver_point_plus_proche(x, y, mes_points)
+
+plt.figure(figsize=(8, 8))
+
+plt.imshow(grille)
+
+for point in mes_points:
+    plt.scatter(point[0], point[1], color='red', s=50)
+
+plt.show()
