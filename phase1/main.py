@@ -71,7 +71,7 @@ for y in range(taille_max):
 
 plt.figure(figsize=(8, 8))
 
-plt.imshow(grille)
+plt.imshow(grille, origin = "lower")
 
 for point in mes_points:
     plt.scatter(point[0], point[1], color='red', s=50)
