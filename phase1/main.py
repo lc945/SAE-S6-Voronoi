@@ -17,16 +17,7 @@ def lire_coordonnees(nom_fichier):
 
 print(lire_coordonnees("points.txt"))
 
-
-# Lecture des points
 mes_points = lire_coordonnees("points.txt")
-
-# Calcul des minimums pour décaler les points
-x_min = min([p[0] for p in mes_points])
-y_min = min([p[1] for p in mes_points])
-
-# Décalage des points
-mes_points_decales = [(p[0] - x_min, p[1] - y_min) for p in mes_points]
 
 def calculer_distance(point1, point2):
     x1 = point1[0]
@@ -52,33 +43,34 @@ def trouver_point_plus_proche(pixel_x, pixel_y, liste_points):
 
 print(calculer_distance((0, 0), (3, 4)))
 
-
-point_A = mes_points_decales[0]
-point_B = mes_points_decales[1]
+point_A = mes_points[0]
+point_B = mes_points[1]
 
 test_avec_coordonnee_fichier = calculer_distance(point_A, point_B)
-print("Le point A (décalé) est : ", point_A)
-print("Le point B (décalé) est : ", point_B)
-print("La distance entre les deux points (décalés) est : ", round(test_avec_coordonnee_fichier,2)) # round c'est pour arrondir le résultat à 2 chiffre apres la virgule.
+print("Le point A est : ", point_A)
+print("Le point B est : ", point_B)
+print("La distance entre les deux est : ", round(test_avec_coordonnee_fichier,2)) # round c'est pour arrondir le résultat à 2 chiffre apres la virgule.
 
+taille_max = 0
+for point in mes_points:
+    if point[0] > taille_max:
+        taille_max = int(point[0])
+    if point[1] > taille_max:
+        taille_max = int(point[1])
 
-# Calcul des tailles max pour la grille sur les points décalés
-taille_x = int(max([p[0] for p in mes_points_decales])) + 10
-taille_y = int(max([p[1] for p in mes_points_decales])) + 10
+taille_max = taille_max + 10
 
-grille = np.zeros((taille_y, taille_x))
+grille = np.zeros((taille_max, taille_max))
 
-for y in range(taille_y):
-    for x in range(taille_x):
-        grille[y, x] = trouver_point_plus_proche(x, y, mes_points_decales)
+for y in range(taille_max):
+    for x in range(taille_max):
+        grille[y, x] = trouver_point_plus_proche(x, y, mes_points)
 
 plt.figure(figsize=(8, 8))
 
 plt.imshow(grille, origin = "lower")
 
-
-# Affichage des points décalés
-for point in mes_points_decales:
+for point in mes_points:
     plt.scatter(point[0], point[1], color='red', s=50)
 
 plt.show()
