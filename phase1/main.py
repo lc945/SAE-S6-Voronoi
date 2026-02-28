@@ -92,7 +92,8 @@ def exporter_diagramme(grille, mes_points, taille_max, nom_fichier, format):
     
     plt.close()
     print(f"✓ {format.upper()} exporté: {nom_fichier}")
-# ============ INTERFACE ============
+
+#  INTERFACE GRAPHIQUE AVEC TKINTER
 
 class AppVoronoi:
     def __init__(self):
