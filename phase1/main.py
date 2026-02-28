@@ -29,12 +29,15 @@ def calculer_distance(point1, point2):
     return distance
 
 def trouver_point_plus_proche(pixel_x, pixel_y, liste_points):
+    # on part avec une distance infinie pour etre sur que le premier point sera forcement plus proche
     distance_min = float('inf')
     index_du_plus_proche = -1
+    
     for index in range(len(liste_points)):
         point = liste_points[index]
         distance = calculer_distance((pixel_x, pixel_y), point)
 
+        # si on trouve un point plus proche on met a jour
         if distance < distance_min:
             distance_min = distance
             index_du_plus_proche = index
@@ -47,6 +50,7 @@ def generer_grille(mes_points):
         print("Erreur: pas de points!")
         return None, None
     
+    # on cherche la valeur max parmi tous les x et y pour savoir quelle taille faire la grille
     taille_max = 0
     for point in mes_points:
         if point[0] > taille_max:
@@ -54,10 +58,12 @@ def generer_grille(mes_points):
         if point[1] > taille_max:
             taille_max = int(point[1])
     
-    taille_max = taille_max + 10
+    taille_max = taille_max + 10  # on ajoute 10 pour avoir un peu de marge sur les bords
     
-    grille = np.zeros((taille_max, taille_max))
+    grille = np.zeros((taille_max, taille_max)) # grille remplie de 0 au depart
     
+    # pour chaque pixel de la grille on regarde quel point est le plus proche
+    # c'est l'algorithme force brute, c'est pas le plus rapide mais c'est simple a comprendre
     for y in range(taille_max):
         for x in range(taille_max):
             grille[y, x] = trouver_point_plus_proche(x, y, mes_points)
@@ -65,8 +71,11 @@ def generer_grille(mes_points):
     return grille, taille_max
 
 
-def exporter_png(grille, mes_points, taille_max, nom_fichier):
-    """Exporte en PNG"""
+# on a factorise les deux fonctions export en une seule
+# avant on avait exporter_png et exporter_svg qui faisaient quasiment la meme chose
+# la seule difference c'est le format donc on le passe en parametre
+def exporter_diagramme(grille, mes_points, taille_max, nom_fichier, format):
+    """Exporte le diagramme dans le format demandé (png ou svg)"""
     plt.figure(figsize=(10, 10))
     plt.imshow(grille, origin="lower")
     
@@ -74,23 +83,15 @@ def exporter_png(grille, mes_points, taille_max, nom_fichier):
         plt.scatter(point[0], point[1], color='red', s=100)
     
     plt.title(f"Voronoi ({len(mes_points)} points)")
-    plt.savefig(nom_fichier, dpi=150)
-    plt.close()
-    print(f"✓ PNG exporté: {nom_fichier}")
-
-def exporter_svg(grille, mes_points, taille_max, nom_fichier):
-    """Exporte en SVG"""
-    plt.figure(figsize=(10, 10))
-    plt.imshow(grille, origin="lower")
     
-    for point in mes_points:
-        plt.scatter(point[0], point[1], color='red', s=100)
+    # savefig gere les deux formats, on lui passe juste le bon nom de fichier
+    if format == 'png':
+        plt.savefig(nom_fichier, dpi=150)
+    else:
+        plt.savefig(nom_fichier, format='svg')
     
-    plt.title(f"Voronoi ({len(mes_points)} points)")
-    plt.savefig(nom_fichier, format='svg')
     plt.close()
-    print(f"✓ SVG exporté: {nom_fichier}")
-
+    print(f"✓ {format.upper()} exporté: {nom_fichier}")
 # ============ INTERFACE ============
 
 class AppVoronoi:
@@ -166,7 +167,7 @@ class AppVoronoi:
         # Boite de dialogue pour choisir ou sauvegarder
         fichier = filedialog.asksaveasfilename(defaultextension=".png", filetypes=[("PNG", "*.png")])
         if fichier:
-            exporter_png(self.grille, self.mes_points, self.taille_max, fichier)
+            exporter_diagramme(self.grille, self.mes_points, self.taille_max, fichier, 'png')
             self.label.config(text="✓ PNG exporté", fg="green")
     
     def export_svg(self):
@@ -176,7 +177,7 @@ class AppVoronoi:
             return
         fichier = filedialog.asksaveasfilename(defaultextension=".svg", filetypes=[("SVG", "*.svg")])
         if fichier:
-            exporter_svg(self.grille, self.mes_points, self.taille_max, fichier)
+            exporter_diagramme(self.grille, self.mes_points, self.taille_max, fichier ,'svg')
             self.label.config(text="✓ SVG exporté", fg="green")
     
     def run(self):
