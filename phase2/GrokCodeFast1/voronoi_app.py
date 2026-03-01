@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
-from scipy.spatial import Voronoi
 import tkinter as tk
 from tkinter import filedialog, messagebox
 
-## Code GrockCodeFast1
 
 def load_points(filename):
     """
@@ -50,64 +49,130 @@ def load_points(filename):
 
 def generate_voronoi(points):
     """
-    Génère le diagramme de Voronoï à partir des points.
+    Placeholder pour compatibilité – le calcul est fait dans plot_voronoi.
 
     Args:
-        points (np.ndarray): Tableau des points (shape: (n, 2)).
+        points (np.ndarray): Tableau des points.
 
     Returns:
-        scipy.spatial.Voronoi: Objet Voronoï contenant les régions et arêtes.
+        None
     """
-    return Voronoi(points)
+    return None
 
 
-def plot_voronoi(vor, points, ax=None):
+def line_intersection(p1, d1, p2, d2):
     """
-    Trace le diagramme de Voronoï avec les points superposés.
+    Calcule l'intersection de deux lignes définies par un point et une direction.
 
     Args:
-        vor (scipy.spatial.Voronoi): Objet Voronoï.
+        p1 (np.ndarray): Point sur la première ligne.
+        d1 (np.ndarray): Direction de la première ligne.
+        p2 (np.ndarray): Point sur la deuxième ligne.
+        d2 (np.ndarray): Direction de la deuxième ligne.
+
+    Returns:
+        np.ndarray or None: Point d'intersection, ou None si parallèle.
+    """
+    A = np.array([d1, -d2]).T
+    b = p2 - p1
+    try:
+        ts = np.linalg.solve(A, b)
+        return p1 + ts[0] * d1
+    except np.linalg.LinAlgError:
+        return None
+
+
+def compute_region(point, points):
+    """
+    Calcule les sommets approximatifs de la région de Voronoï pour un point.
+
+    Utilise les intersections des bissectrices avec les voisins pour former un polygone.
+
+    Args:
+        point (np.ndarray): Le point central.
+        points (np.ndarray): Tous les points.
+
+    Returns:
+        np.ndarray or None: Sommets du polygone, triés autour du point, ou None.
+    """
+    neighbors = [p for p in points if not np.allclose(p, point)]
+    vertices = []
+    for i in range(len(neighbors)):
+        for j in range(i+1, len(neighbors)):
+            p1 = neighbors[i]
+            p2 = neighbors[j]
+            mid1 = (point + p1) / 2
+            dir1 = p1 - point
+            perp1 = np.array([-dir1[1], dir1[0]])
+            perp1 = perp1 / np.linalg.norm(perp1)
+            mid2 = (point + p2) / 2
+            dir2 = p2 - point
+            perp2 = np.array([-dir2[1], dir2[0]])
+            perp2 = perp2 / np.linalg.norm(perp2)
+            inter = line_intersection(mid1, perp1, mid2, perp2)
+            if inter is not None:
+                vertices.append(inter)
+    if vertices:
+        # Trier les vertices autour du point par angle
+        angles = [np.angle((v - point)[0] + 1j * (v - point)[1]) for v in vertices]
+        sorted_indices = np.argsort(angles)
+        sorted_vertices = [vertices[i] for i in sorted_indices]
+        return np.array(sorted_vertices)
+    return None
+
+
+def plot_voronoi(points, ax=None):
+    """
+    Trace une approximation du diagramme de Voronoï avec zones colorées et points.
+
+    Calcule et remplit les régions approximatives pour chaque point avec une couleur unique.
+
+    Args:
         points (np.ndarray): Tableau des points.
-        ax (matplotlib.axes.Axes, optional): Axe pour tracer. Si None, utilise plt.gca().
+        ax (matplotlib.axes.Axes, optional): Axe pour tracer.
     """
     if ax is None:
         ax = plt.gca()
-    # Tracer les arêtes du diagramme
-    for simplex in vor.ridge_vertices:
-        simplex = np.asarray(simplex)
-        if np.all(simplex >= 0):
-            ax.plot(vor.vertices[simplex, 0], vor.vertices[simplex, 1], 'k-')
-    # Tracer les points
-    ax.plot(points[:, 0], points[:, 1], 'ro')  # Points en rouge
+
+    colors = cm.rainbow(np.linspace(0, 1, len(points)))
+    for i, point in enumerate(points):
+        region = compute_region(point, points)
+        if region is not None and len(region) > 2:
+            # Fermer le polygone pour fill
+            region_closed = np.vstack([region, region[0]])
+            ax.fill(region_closed[:, 0], region_closed[:, 1], color=colors[i], alpha=0.5)
+            # Tracer le contour noir
+            ax.plot(region_closed[:, 0], region_closed[:, 1], 'k-')
+
+    # Tracer les points rouges
+    ax.plot(points[:, 0], points[:, 1], 'ro')
     ax.set_aspect('equal')
 
 
-def export_voronoi(vor, points, filename, format_type):
+def export_voronoi(points, filename, format_type):
     """
-    Exporte le diagramme de Voronoï en SVG ou PNG.
+    Exporte l'approximation du diagramme de Voronoï en SVG ou PNG.
 
     Args:
-        vor (scipy.spatial.Voronoi): Objet Voronoï.
         points (np.ndarray): Tableau des points.
         filename (str): Nom du fichier de sortie (sans extension).
         format_type (str): 'svg' ou 'png'.
     """
     fig, ax = plt.subplots()
-    plot_voronoi(vor, points, ax)
-    plt.title("Diagramme de Voronoï")
+    plot_voronoi(points, ax)
+    plt.title("Approximation du Diagramme de Voronoï")
     plt.savefig(f"{filename}.{format_type}", format=format_type, bbox_inches='tight')
     plt.close(fig)
 
 
 class VoronoiApp:
     """
-    Application Tkinter pour charger, générer et visualiser un diagramme de Voronoï.
+    Application Tkinter pour charger, générer et visualiser une approximation du diagramme de Voronoï.
     """
     def __init__(self, root):
         self.root = root
-        self.root.title("Générateur de Diagramme de Voronoï")
+        self.root.title("Approximation du Diagramme de Voronoï")
         self.points = None
-        self.vor = None
 
         # Widgets
         self.load_button = tk.Button(root, text="Charger Fichier", command=self.load_file)
@@ -143,12 +208,11 @@ class VoronoiApp:
                 self.generate_button.config(state=tk.DISABLED)
 
     def generate_and_plot(self):
-        """Génère le Voronoï et l'affiche dans le canvas Tkinter."""
+        """Génère l'approximation et l'affiche dans le canvas Tkinter."""
         if self.points is not None:
-            self.vor = generate_voronoi(self.points)
             fig, ax = plt.subplots(figsize=(6, 6))
-            plot_voronoi(self.vor, self.points, ax)
-            ax.set_title("Diagramme de Voronoï")
+            plot_voronoi(self.points, ax)
+            ax.set_title("Approximation du Diagramme de Voronoï")
 
             # Intégrer dans Tkinter
             for widget in self.canvas_frame.winfo_children():
@@ -162,12 +226,12 @@ class VoronoiApp:
             self.error_label.config(text="")
 
     def export(self, format_type):
-        """Exporte le diagramme dans le format spécifié."""
-        if self.vor is not None and self.points is not None:
+        """Exporte l'approximation dans le format spécifié."""
+        if self.points is not None:
             filename = filedialog.asksaveasfilename(defaultextension=f".{format_type}", filetypes=[(f"Fichiers {format_type.upper()}", f"*.{format_type}")])
             if filename:
                 try:
-                    export_voronoi(self.vor, self.points, filename, format_type)
+                    export_voronoi(self.points, filename, format_type)
                     messagebox.showinfo("Succès", f"Exporté en {format_type.upper()} : {filename}.{format_type}")
                 except Exception as e:
                     messagebox.showerror("Erreur", f"Échec de l'export : {str(e)}")
